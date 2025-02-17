@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Gift Advisor Chat";
+    ViewData["Title"] = "Gift Advisor";
 }
 
 <div class="container mt-4">
@@ -7,99 +7,209 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Gift Advisor Chat</h5>
+                    <h5 class="mb-0">Gift Advisor</h5>
                 </div>
-                <div class="card-body">
-                    <div id="chat-messages" class="mb-4" style="height: 400px; overflow-y: auto;">
-                        <div class="system-message">
-                            <p class="mb-2">👋 Hello! I'm your gift advisor. I can help you find the perfect gift. What kind of gift are you looking for?</p>
-                        </div>
+                <div class="card-body" style="height: 400px; overflow-y: auto;" id="chatContainer">
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages will be added here -->
                     </div>
-                    <form id="chat-form" class="d-flex">
-                        <input type="text" id="message-input" class="form-control me-2" placeholder="Type your message...">
-                        <button type="submit" class="btn btn-primary">Send</button>
-                    </form>
+                </div>
+                <div class="card-footer">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="userInput" placeholder="Type your answer here...">
+                        <button class="btn btn-primary" id="sendButton">Send</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-@section Styles {
-    <style>
-        .system-message {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .user-message {
-            background-color: #007bff;
-            color: white;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            text-align: right;
-        }
-        
-        .assistant-message {
-            background-color: #e9ecef;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-        }
-    </style>
-}
-
 @section Scripts {
     <script>
-        const chatMessages = document.getElementById('chat-messages');
-        const chatForm = document.getElementById('chat-form');
-        const messageInput = document.getElementById('message-input');
+        const questions = [
+            {
+                id: 'budget',
+                text: 'What is your budget for the gift? (in ₪)',
+                validation: (answer) => !isNaN(answer) && answer > 0,
+                errorMessage: 'Please enter a valid amount'
+            },
+            {
+                id: 'age',
+                text: 'What is the age of the recipient?',
+                validation: (answer) => !isNaN(answer) && answer > 0 && answer < 120,
+                errorMessage: 'Please enter a valid age'
+            },
+            {
+                id: 'occasion',
+                text: 'What is the occasion? (Birthday, Anniversary, Holiday, etc.)',
+                validation: (answer) => answer.length > 0,
+                errorMessage: 'Please enter an occasion'
+            },
+            {
+                id: 'interests',
+                text: 'What are their main interests? (Sports, Reading, Cooking, etc.)',
+                validation: (answer) => answer.length > 0,
+                errorMessage: 'Please enter at least one interest'
+            },
+            {
+                id: 'useFrequency',
+                text: 'How often would they use this gift? (Daily, Weekly, Occasionally)',
+                validation: (answer) => ['daily', 'weekly', 'occasionally'].includes(answer.toLowerCase()),
+                errorMessage: 'Please enter: Daily, Weekly, or Occasionally'
+            }
+        ];
 
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        let currentQuestionIndex = 0;
+        const answers = {};
+
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isUser ? 'user' : 'bot'} mb-3`;
+            messageDiv.innerHTML = `
+                <div class="message-content p-3 ${isUser ? 'bg-light text-dark' : 'bg-primary text-white'} rounded">
+                    ${text}
+                </div>
+            `;
+            document.getElementById('chatMessages').appendChild(messageDiv);
+            document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
+        }
+
+        function askQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                addMessage(questions[currentQuestionIndex].text);
+            } else {
+                // All questions answered, send to server
+                submitAnswers();
+            }
+        }
+
+        function handleAnswer(answer) {
+            const currentQuestion = questions[currentQuestionIndex];
             
-            const message = messageInput.value.trim();
-            if (!message) return;
+            if (!currentQuestion.validation(answer)) {
+                addMessage(currentQuestion.errorMessage);
+                return;
+            }
+
+            addMessage(answer, true);
+            answers[currentQuestion.id] = answer;
             
-            // Add user message to chat
-            const userMessageDiv = document.createElement('div');
-            userMessageDiv.className = 'user-message';
-            userMessageDiv.innerHTML = `<p class="mb-0">${message}</p>`;
-            chatMessages.appendChild(userMessageDiv);
+            currentQuestionIndex++;
             
-            // Clear input
-            messageInput.value = '';
-            
+            if (currentQuestionIndex < questions.length) {
+                setTimeout(askQuestion, 1000);
+            } else {
+                setTimeout(() => {
+                    addMessage("Thank you! Let me analyze your answers and find the perfect gift suggestions...");
+                    submitAnswers();
+                }, 1000);
+            }
+        }
+
+        async function submitAnswers() {
             try {
-                const response = await fetch('https://localhost:7001/api/chat', {
+                const response = await fetch('/Home/GetGiftSuggestions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(message)
+                    body: JSON.stringify(answers)
                 });
-                
-                const data = await response.json();
-                
-                // Add assistant message to chat
-                const assistantMessageDiv = document.createElement('div');
-                assistantMessageDiv.className = 'assistant-message';
-                assistantMessageDiv.innerHTML = `<p class="mb-0">${data.message}</p>`;
-                chatMessages.appendChild(assistantMessageDiv);
+
+                if (response.ok) {
+                    const suggestions = await response.json();
+                    displaySuggestions(suggestions);
+                } else {
+                    addMessage("Sorry, I couldn't process your request. Please try again.");
+                }
             } catch (error) {
                 console.error('Error:', error);
-                // Add error message to chat
-                const errorMessageDiv = document.createElement('div');
-                errorMessageDiv.className = 'system-message';
-                errorMessageDiv.innerHTML = `<p class="mb-0 text-danger">Sorry, there was an error processing your request.</p>`;
-                chatMessages.appendChild(errorMessageDiv);
+                addMessage("Sorry, something went wrong. Please try again.");
             }
+        }
+
+        function displaySuggestions(suggestions) {
+            let message = "Based on your answers, here are some gift suggestions:<br><br>";
+            suggestions.forEach(suggestion => {
+                message += `
+                    <div class="suggestion mb-2">
+                        <strong>${suggestion.name}</strong> - ₪${suggestion.price}<br>
+                        ${suggestion.description}<br>
+                        <button class="btn btn-sm btn-success mt-2" onclick="addToCart(${suggestion.id})">
+                            Add to Cart
+                        </button>
+                    </div>
+                `;
+            });
+            addMessage(message);
+        }
+
+        async function addToCart(productId) {
+            try {
+                const response = await fetch('/Home/AddToCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        productId: productId, 
+                        quantity: 1 
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        updateStoredCartCount(result.cartCount);
+                        addMessage("Item added to your cart!");
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage("Sorry, couldn't add the item to your cart. Please try again.");
+            }
+        }
+
+        document.getElementById('sendButton').addEventListener('click', () => {
+            const input = document.getElementById('userInput');
+            const answer = input.value.trim();
             
-            // Scroll to bottom
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            if (answer) {
+                handleAnswer(answer);
+                input.value = '';
+            }
         });
+
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('sendButton').click();
+            }
+        });
+
+        // Start the conversation
+        addMessage("Hello! I'm your gift advisor. I'll help you find the perfect gift by asking a few questions.");
+        setTimeout(askQuestion, 1000);
     </script>
+
+    <style>
+        .chat-message {
+            max-width: 80%;
+        }
+
+        .chat-message.user {
+            margin-left: auto;
+        }
+
+        .chat-message.bot {
+            margin-right: auto;
+        }
+
+        .suggestion {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
 } 

@@ -205,6 +205,112 @@ public class HomeController : Controller
         public string PaymentMethod { get; set; } = string.Empty;
     }
 
+    [HttpPost]
+    public async Task<IActionResult> GetGiftSuggestions([FromBody] GiftSuggestionRequest request)
+    {
+        try
+        {
+            // Get all products
+            var response = await _httpClient.GetAsync("api/products");
+            if (!response.IsSuccessStatusCode)
+            {
+                return BadRequest("Failed to get products");
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var allProducts = JsonSerializer.Deserialize<List<Product>>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            }) ?? new List<Product>();
+
+            // Filter products based on budget and age
+            var suggestions = allProducts
+                .Where(p => p.Price <= request.Budget)
+                .Select(p => new
+                {
+                    Product = p,
+                    AgeScore = CalculateAgeScore(p.Category, request.Age)
+                })
+                .Where(p => p.AgeScore > 0) // Filter out products with 0 age score
+                .OrderByDescending(p => p.AgeScore) // Sort by age relevance
+                .Select(p => p.Product)
+                .ToList();
+
+            return Json(suggestions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error getting gift suggestions: {ex.Message}");
+            return BadRequest("Failed to get gift suggestions");
+        }
+    }
+
+    private double CalculateAgeScore(string category, int age)
+    {
+        // Age ranges and their appropriate categories
+        if (age < 12) // Kids
+        {
+            switch (category.ToLower())
+            {
+                case "toys":
+                case "games":
+                    return 1.0;
+                case "books":
+                    return 0.8;
+                case "accessories":
+                    return 0.4;
+                default:
+                    return 0.2;
+            }
+        }
+        else if (age < 20) // Teenagers
+        {
+            switch (category.ToLower())
+            {
+                case "accessories":
+                case "electronics":
+                    return 1.0;
+                case "games":
+                case "sports":
+                    return 0.8;
+                case "books":
+                    return 0.6;
+                default:
+                    return 0.4;
+            }
+        }
+        else if (age < 30) // Young Adults
+        {
+            switch (category.ToLower())
+            {
+                case "electronics":
+                case "accessories":
+                    return 1.0;
+                case "home":
+                    return 0.8;
+                case "food":
+                    return 0.7;
+                default:
+                    return 0.5;
+            }
+        }
+        else // Adults
+        {
+            switch (category.ToLower())
+            {
+                case "home":
+                case "accessories":
+                    return 1.0;
+                case "food":
+                    return 0.9;
+                case "electronics":
+                    return 0.7;
+                default:
+                    return 0.6;
+            }
+        }
+    }
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
