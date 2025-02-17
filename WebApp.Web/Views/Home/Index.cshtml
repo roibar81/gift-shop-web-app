@@ -1,0 +1,116 @@
+﻿@model IEnumerable<WebApp.Web.Models.Product>
+@{
+    ViewData["Title"] = "Gift Shop";
+}
+
+<div class="text-center mb-5">
+    <h1 class="display-4">Welcome to Our Gift Shop</h1>
+    <p class="lead">Find the perfect gift for your loved ones</p>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Categories</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action">All</a>
+                    <a href="#" class="list-group-item list-group-item-action">Accessories</a>
+                    <a href="#" class="list-group-item list-group-item-action">Home</a>
+                    <a href="#" class="list-group-item list-group-item-action">Food</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="row">
+                @foreach (var product in Model)
+                {
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
+                            <div class="card-body">
+                                <h5 class="card-title">@product.Name</h5>
+                                <p class="card-text">@product.Description</p>
+                                <p class="card-text"><strong>$@product.Price.ToString("0.00")</strong></p>
+                            </div>
+                            <div class="card-footer bg-white border-top-0">
+                                <button class="btn btn-primary w-100 add-to-cart" data-product-id="@product.Id">
+                                    Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', async () => {
+                button.disabled = true;
+                button.textContent = 'Adding...';
+                
+                const productId = parseInt(button.getAttribute('data-product-id'));
+                
+                try {
+                    const response = await fetch('/Home/AddToCart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            productId: productId, 
+                            quantity: 1 
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to add to cart');
+                    }
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        // Update cart count in the navbar
+                        const cartCount = document.getElementById('cart-count');
+                        if (cartCount) {
+                            cartCount.textContent = result.cartCount;
+                        }
+                        
+                        // Show success message
+                        button.classList.remove('btn-primary');
+                        button.classList.add('btn-success');
+                        button.textContent = 'Added to Cart!';
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(() => {
+                            button.classList.remove('btn-success');
+                            button.classList.add('btn-primary');
+                            button.textContent = 'Add to Cart';
+                            button.disabled = false;
+                        }, 2000);
+                    } else {
+                        throw new Error('Failed to add to cart');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    button.classList.remove('btn-primary');
+                    button.classList.add('btn-danger');
+                    button.textContent = 'Error! Try Again';
+                    
+                    // Reset button after 2 seconds
+                    setTimeout(() => {
+                        button.classList.remove('btn-danger');
+                        button.classList.add('btn-primary');
+                        button.textContent = 'Add to Cart';
+                        button.disabled = false;
+                    }, 2000);
+                }
+            });
+        });
+    </script>
+}

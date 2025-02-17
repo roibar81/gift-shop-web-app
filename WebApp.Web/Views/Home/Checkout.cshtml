@@ -1,0 +1,163 @@
+@model IEnumerable<WebApp.Web.Models.CartItem>
+@{
+    ViewData["Title"] = "Checkout";
+    var totalAmount = Model.Sum(i => (i.Product?.Price ?? 0) * i.Quantity);
+    var itemCount = Model.Sum(i => i.Quantity);
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Shipping Information</h3>
+                    <form id="checkoutForm">
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="fullName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Shipping Address</label>
+                            <textarea class="form-control" id="address" rows="3" required></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">City</label>
+                                <input type="text" class="form-control" id="city" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="state" class="form-label">State</label>
+                                <input type="text" class="form-control" id="state" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="zipCode" class="form-label">ZIP Code</label>
+                                <input type="text" class="form-control" id="zipCode" required>
+                            </div>
+                        </div>
+
+                        <h3 class="card-title mb-4 mt-4">Payment Information</h3>
+                        <div class="mb-3">
+                            <label for="paymentMethod" class="form-label">Payment Method</label>
+                            <select class="form-select" id="paymentMethod" required>
+                                <option value="">Select payment method</option>
+                                <option value="creditCard">Credit Card</option>
+                                <option value="paypal">PayPal</option>
+                            </select>
+                        </div>
+
+                        <div id="creditCardFields" style="display: none;">
+                            <div class="mb-3">
+                                <label for="cardNumber" class="form-label">Card Number</label>
+                                <input type="text" class="form-control" id="cardNumber" placeholder="**** **** **** ****">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="expiryDate" class="form-label">Expiry Date</label>
+                                    <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="cvv" class="form-label">CVV</label>
+                                    <input type="text" class="form-control" id="cvv" placeholder="***">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm position-sticky" style="top: 2rem;">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Order Summary</h4>
+                    
+                    @foreach (var item in Model)
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="text-muted">@item.Quantity x</span>
+                                <span>@item.Product?.Name</span>
+                            </div>
+                            <span>$@(((item.Product?.Price ?? 0) * item.Quantity).ToString("0.00"))</span>
+                        </div>
+                    }
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span>$@(totalAmount.ToString("0.00"))</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping</span>
+                        <span class="text-success">Free</span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-4">
+                        <strong>Total</strong>
+                        <h4 class="text-primary mb-0">$@(totalAmount.ToString("0.00"))</h4>
+                    </div>
+                    
+                    <button class="btn btn-primary w-100" id="placeOrderButton">
+                        Place Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('paymentMethod').addEventListener('change', function() {
+            const creditCardFields = document.getElementById('creditCardFields');
+            creditCardFields.style.display = this.value === 'creditCard' ? 'block' : 'none';
+        });
+
+        document.getElementById('placeOrderButton').addEventListener('click', async function() {
+            if (!document.getElementById('checkoutForm').checkValidity()) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const button = this;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+            try {
+                const shippingAddress = `${document.getElementById('fullName').value}\n${document.getElementById('address').value}\n${document.getElementById('city').value}, ${document.getElementById('state').value} ${document.getElementById('zipCode').value}`;
+                const paymentMethod = document.getElementById('paymentMethod').value;
+
+                const response = await fetch('/Home/PlaceOrder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        shippingAddress,
+                        paymentMethod
+                    })
+                });
+
+                if (response.ok) {
+                    const order = await response.json();
+                    window.location.href = `/Home/OrderConfirmation/${order.id}`;
+                } else {
+                    throw new Error('Failed to place order');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to place order. Please try again.');
+                button.disabled = false;
+                button.innerHTML = 'Place Order';
+            }
+        });
+    </script>
+} 
