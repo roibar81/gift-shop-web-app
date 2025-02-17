@@ -75,11 +75,8 @@
                     
                     const result = await response.json();
                     if (result.success) {
-                        // Update cart count in the navbar
-                        const cartCount = document.getElementById('cart-count');
-                        if (cartCount) {
-                            cartCount.textContent = result.cartCount;
-                        }
+                        // Update cart count in localStorage and navbar
+                        updateStoredCartCount(result.cartCount);
                         
                         // Show success message
                         button.classList.remove('btn-primary');

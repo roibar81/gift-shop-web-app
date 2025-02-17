@@ -40,7 +40,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Configure the port
-builder.WebHost.UseUrls("https://localhost:7001");
+// Configure the port - moving this before app.Run()
+app.Urls.Add("https://localhost:7001");
 
 app.Run();

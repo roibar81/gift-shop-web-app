@@ -135,7 +135,7 @@
                             Proceed to Checkout
                         </button>
 
-                        <a href="/" class="btn btn-outline-secondary w-100">
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary w-100">
                             Continue Shopping
                         </a>
                     </div>
@@ -151,6 +151,9 @@
             // Update item count
             document.getElementById('itemCount').textContent = `${cartCount} items`;
             document.getElementById('summaryItemCount').textContent = cartCount;
+            
+            // Update cart count in localStorage and navbar
+            updateStoredCartCount(cartCount);
             
             // Update totals
             const subtotal = newTotal;
@@ -188,7 +191,10 @@
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ productId, quantity: newQuantity })
+                        body: JSON.stringify({ 
+                            productId: productId, 
+                            quantity: newQuantity 
+                        })
                     });
                     
                     const result = await response.json();
@@ -228,7 +234,9 @@
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ productId })
+                        body: JSON.stringify({ 
+                            productId: productId 
+                        })
                     });
                     
                     const result = await response.json();

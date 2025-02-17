@@ -73,6 +73,8 @@ public class CartService
         try
         {
             var response = await _httpClient.DeleteAsync($"api/cart/{_userId}/items/{productId}");
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Remove from cart response: {response.StatusCode}, Content: {content}");
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)

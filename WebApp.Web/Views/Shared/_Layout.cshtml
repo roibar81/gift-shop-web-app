@@ -53,6 +53,33 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Load cart count from localStorage or fetch from server if not available
+        document.addEventListener('DOMContentLoaded', async function() {
+            const storedCount = localStorage.getItem('cartCount');
+            if (storedCount !== null) {
+                document.getElementById('cart-count').textContent = storedCount;
+            } else {
+                try {
+                    const response = await fetch('/Home/Cart');
+                    if (response.ok) {
+                        const cartItems = await response.json();
+                        const count = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+                        localStorage.setItem('cartCount', count);
+                        document.getElementById('cart-count').textContent = count;
+                    }
+                } catch (error) {
+                    console.error('Error fetching cart count:', error);
+                }
+            }
+        });
+
+        // Function to update cart count in localStorage
+        function updateStoredCartCount(count) {
+            localStorage.setItem('cartCount', count);
+            document.getElementById('cart-count').textContent = count;
+        }
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

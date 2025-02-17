@@ -97,12 +97,18 @@ public class HomeController : Controller
         public int Quantity { get; set; }
     }
 
+    public class UpdateCartQuantityRequest
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+    }
+
     [HttpPost]
-    public async Task<IActionResult> UpdateCartQuantity(int productId, int quantity)
+    public async Task<IActionResult> UpdateCartQuantity([FromBody] UpdateCartQuantityRequest request)
     {
         try 
         {
-            var success = await _cartService.UpdateQuantityAsync(productId, quantity);
+            var success = await _cartService.UpdateQuantityAsync(request.ProductId, request.Quantity);
             if (!success)
                 return Json(new { success = false, message = "Failed to update quantity" });
 
@@ -121,11 +127,11 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> RemoveFromCart(int productId)
+    public async Task<IActionResult> RemoveFromCart([FromBody] RemoveFromCartRequest request)
     {
         try 
         {
-            var success = await _cartService.RemoveFromCartAsync(productId);
+            var success = await _cartService.RemoveFromCartAsync(request.ProductId);
             if (!success)
                 return Json(new { success = false, message = "Failed to remove item" });
 
@@ -141,6 +147,11 @@ public class HomeController : Controller
             _logger.LogError($"Error removing item from cart: {ex.Message}");
             return Json(new { success = false, message = "An error occurred" });
         }
+    }
+
+    public class RemoveFromCartRequest
+    {
+        public int ProductId { get; set; }
     }
 
     public IActionResult Chat()
