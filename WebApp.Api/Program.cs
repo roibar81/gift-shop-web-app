@@ -2,6 +2,9 @@ using WebApp.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add configuration sources
+builder.Configuration.AddEnvironmentVariables(prefix: "OPENAI_");
+
 // Add services to the container.
 builder.Services.AddCors(options =>
 {

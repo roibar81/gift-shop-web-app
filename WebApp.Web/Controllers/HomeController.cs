@@ -311,6 +311,34 @@ public class HomeController : Controller
         }
     }
 
+    public async Task<IActionResult> Product(int id)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/products/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var product = JsonSerializer.Deserialize<Product>(content, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                
+                if (product != null)
+                {
+                    return View(product);
+                }
+            }
+            
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error getting product details: {ex.Message}");
+            return NotFound();
+        }
+    }
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
