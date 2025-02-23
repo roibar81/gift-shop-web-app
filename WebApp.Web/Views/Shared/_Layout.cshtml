@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,34 +10,33 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Gift Shop</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Shop</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Chat">Gift Advisor</a>
-                        </li>
-                    </ul>
-                    <div class="d-flex">
-                        <a href="@Url.Action("Cart", "Home")" class="btn btn-outline-primary position-relative" id="cart-button">
-                            <i class="bi bi-cart"></i> Cart
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-count">
-                                0
-                            </span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+    <!-- סרגל ניווט עליון -->
+    <header class="navbar">
+        <div class="logo">🎁 חנות מתנות</div>
+        <input type="text" placeholder="חפש מתנה...">
+        <nav>
+            <ul>
+                <li><a asp-controller="Home" asp-action="Index">דף הבית</a></li>
+                <li><a asp-controller="Home" asp-action="Chat">יועץ מתנות</a></li>
+                <li><a href="#">קטגוריות</a></li>
+                <li><a href="#">אודות</a></li>
+                <li>
+                    <a href="@Url.Action("Cart", "Home")" class="position-relative" id="cart-button">
+                        🛒 עגלת קניות
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-count">
+                            0
+                        </span>
+                    </a>
+                </li>
+            </ul>
         </nav>
     </header>
+
+    <!-- באנר ראשי -->
+    <section class="banner">
+        <h1>ברוכים הבאים לחנות המתנות שלנו! 🎉</h1>
+    </section>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -45,8 +44,8 @@
     </div>
 
     <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - Gift Shop - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        <div class="container text-center">
+            &copy; 2024 - חנות מתנות - <a asp-controller="Home" asp-action="Privacy">פרטיות</a>
         </div>
     </footer>
 

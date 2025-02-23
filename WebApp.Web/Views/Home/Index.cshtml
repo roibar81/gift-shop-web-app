@@ -1,113 +1,131 @@
 ﻿@model IEnumerable<WebApp.Web.Models.Product>
 @{
     ViewData["Title"] = "Gift Shop";
+    var pageNumber = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var currentCategory = ViewBag.Category ?? "all";
 }
 
 <div class="text-center mb-5">
-    <h1 class="display-4">Welcome to Our Gift Shop</h1>
-    <p class="lead">Find the perfect gift for your loved ones</p>
+    <h1 class="display-4">ברוכים הבאים לחנות המתנות שלנו</h1>
+    <p class="lead">מצאו את המתנה המושלמת</p>
 </div>
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Categories</h5>
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="#" class="list-group-item list-group-item-action">All</a>
-                    <a href="#" class="list-group-item list-group-item-action">Accessories</a>
-                    <a href="#" class="list-group-item list-group-item-action">Home</a>
-                    <a href="#" class="list-group-item list-group-item-action">Food</a>
-                </div>
-            </div>
+<!-- קטגוריות -->
+<section class="categories">
+    <button onclick="filterByCategory('all')" class="@(currentCategory == "all" ? "active" : "")">הכל</button>
+    <button onclick="filterByCategory('Electronics')" class="@(currentCategory == "Electronics" ? "active" : "")">אלקטרוניקה</button>
+    <button onclick="filterByCategory('Books')" class="@(currentCategory == "Books" ? "active" : "")">ספרים</button>
+    <button onclick="filterByCategory('Games')" class="@(currentCategory == "Games" ? "active" : "")">משחקים</button>
+    <button onclick="filterByCategory('Home')" class="@(currentCategory == "Home" ? "active" : "")">לבית</button>
+    <button onclick="filterByCategory('Accessories')" class="@(currentCategory == "Accessories" ? "active" : "")">אביזרים</button>
+    <button onclick="filterByCategory('Sports')" class="@(currentCategory == "Sports" ? "active" : "")">ספורט</button>
+    <button onclick="filterByCategory('Food')" class="@(currentCategory == "Food" ? "active" : "")">אוכל</button>
+    <button onclick="filterByCategory('Art')" class="@(currentCategory == "Art" ? "active" : "")">אומנות</button>
+    <button onclick="filterByCategory('Toys')" class="@(currentCategory == "Toys" ? "active" : "")">צעצועים</button>
+</section>
+
+<!-- רשימת מוצרים -->
+<section class="product-list" id="productList">
+    @foreach (var product in Model)
+    {
+        <div class="product" data-category="@product.Category">
+            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                 data-src="@product.ImageUrl" 
+                 alt="@product.Name"
+                 class="lazy">
+            <h3>@product.Name</h3>
+            <p>מחיר: $@product.Price.ToString("F2") / ₪@((product.Price * 3.7m).ToString("F0")) ש"ח</p>
+            <button class="btn btn-primary" onclick="addToCart(@product.Id)">הוספה לסל</button>
         </div>
-        <div class="col-md-9">
-            <div class="row">
-                @foreach (var product in Model)
-                {
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100">
-                            <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
-                            <div class="card-body">
-                                <h5 class="card-title">@product.Name</h5>
-                                <p class="card-text">@product.Description</p>
-                                <p class="card-text"><strong>$@product.Price.ToString("0.00")</strong></p>
-                            </div>
-                            <div class="card-footer bg-white border-top-0">
-                                <button class="btn btn-primary w-100 add-to-cart" data-product-id="@product.Id">
-                                    Add to Cart
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        </div>
+    }
+</section>
+
+<!-- דפדוף -->
+<div class="pagination-container text-center mt-4">
+    <div class="btn-group" role="group" aria-label="Pagination">
+        @if (pageNumber > 1)
+        {
+            <a href="?category=@currentCategory&page=@(pageNumber-1)" class="btn btn-outline-primary">&raquo; הקודם</a>
+        }
+        <span class="btn btn-primary">עמוד @pageNumber</span>
+        @if (pageNumber < totalPages)
+        {
+            <a href="?category=@currentCategory&page=@(pageNumber+1)" class="btn btn-outline-primary">הבא &laquo;</a>
+        }
     </div>
 </div>
 
 @section Scripts {
     <script>
-        document.querySelectorAll('.add-to-cart').forEach(button => {
-            button.addEventListener('click', async () => {
-                button.disabled = true;
-                button.textContent = 'Adding...';
-                
-                const productId = parseInt(button.getAttribute('data-product-id'));
-                
-                try {
-                    const response = await fetch('/Home/AddToCart', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ 
-                            productId: productId, 
-                            quantity: 1 
-                        })
+        // Lazy Loading implementation
+        document.addEventListener("DOMContentLoaded", function() {
+            let lazyImages = [].slice.call(document.querySelectorAll("img.lazy"));
+
+            if ("IntersectionObserver" in window) {
+                let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            let lazyImage = entry.target;
+                            lazyImage.src = lazyImage.dataset.src;
+                            lazyImage.classList.remove("lazy");
+                            lazyImageObserver.unobserve(lazyImage);
+                        }
                     });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to add to cart');
-                    }
-                    
-                    const result = await response.json();
-                    if (result.success) {
-                        // Update cart count in localStorage and navbar
-                        updateStoredCartCount(result.cartCount);
-                        
-                        // Show success message
-                        button.classList.remove('btn-primary');
-                        button.classList.add('btn-success');
-                        button.textContent = 'Added to Cart!';
-                        
-                        // Reset button after 2 seconds
-                        setTimeout(() => {
-                            button.classList.remove('btn-success');
-                            button.classList.add('btn-primary');
-                            button.textContent = 'Add to Cart';
-                            button.disabled = false;
-                        }, 2000);
-                    } else {
-                        throw new Error('Failed to add to cart');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    button.classList.remove('btn-primary');
-                    button.classList.add('btn-danger');
-                    button.textContent = 'Error! Try Again';
-                    
-                    // Reset button after 2 seconds
-                    setTimeout(() => {
-                        button.classList.remove('btn-danger');
-                        button.classList.add('btn-primary');
-                        button.textContent = 'Add to Cart';
-                        button.disabled = false;
-                    }, 2000);
-                }
-            });
+                });
+
+                lazyImages.forEach(function(lazyImage) {
+                    lazyImageObserver.observe(lazyImage);
+                });
+            }
         });
+
+        function filterByCategory(category) {
+            window.location.href = `?category=${category}&page=1`;
+        }
+
+        async function addToCart(productId) {
+            try {
+                const response = await fetch('https://localhost:7001/api/cart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        productId: productId,
+                        quantity: 1
+                    })
+                });
+
+                if (response.ok) {
+                    const currentCount = parseInt(localStorage.getItem('cartCount') || '0');
+                    updateStoredCartCount(currentCount + 1);
+                } else {
+                    console.error('Failed to add item to cart');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
     </script>
+
+    <style>
+        .lazy {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        img:not(.lazy) {
+            opacity: 1;
+        }
+
+        .categories button.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .pagination-container {
+            margin: 2rem 0;
+        }
+    </style>
 }

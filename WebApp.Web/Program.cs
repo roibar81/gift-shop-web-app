@@ -9,6 +9,7 @@ builder.Services.AddHttpClient();
 // Register services
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<ProductService>();
 
 // Configure the port
 builder.WebHost.UseUrls("https://localhost:7000");

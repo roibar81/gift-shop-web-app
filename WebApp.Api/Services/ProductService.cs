@@ -218,4 +218,34 @@ public class ProductService
             _logger.LogInformation("Seeded initial product data");
         }
     }
+
+    public async Task<(IEnumerable<Product> Products, int TotalCount)> GetPaginatedProductsAsync(int page = 1, int pageSize = 12)
+    {
+        _logger.LogInformation($"Fetching page {page} with {pageSize} products per page");
+        var query = _context.Products.Include(p => p.Category);
+        
+        var totalCount = await query.CountAsync();
+        var products = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (products, totalCount);
+    }
+
+    public async Task<(IEnumerable<Product> Products, int TotalCount)> GetPaginatedProductsByCategoryAsync(string categoryName, int page = 1, int pageSize = 12)
+    {
+        _logger.LogInformation($"Fetching page {page} with {pageSize} products for category: {categoryName}");
+        var query = _context.Products
+            .Include(p => p.Category)
+            .Where(p => p.Category.Name.ToLower() == categoryName.ToLower());
+        
+        var totalCount = await query.CountAsync();
+        var products = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (products, totalCount);
+    }
 } 

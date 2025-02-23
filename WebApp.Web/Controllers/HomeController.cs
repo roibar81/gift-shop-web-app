@@ -12,51 +12,36 @@ public class HomeController : Controller
     private readonly HttpClient _httpClient;
     private readonly CartService _cartService;
     private readonly OrderService _orderService;
+    private readonly ProductService _productService;
 
-    public HomeController(ILogger<HomeController> logger, IHttpClientFactory httpClientFactory, CartService cartService, OrderService orderService)
+    public HomeController(ILogger<HomeController> logger, IHttpClientFactory httpClientFactory, CartService cartService, OrderService orderService, ProductService productService)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
         _httpClient.BaseAddress = new Uri("https://localhost:7001/");
         _cartService = cartService;
         _orderService = orderService;
+        _productService = productService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? category = null, int page = 1)
     {
         try
         {
-            _logger.LogInformation("Fetching products from API");
-            var response = await _httpClient.GetAsync("api/products");
-            _logger.LogInformation($"API Response Status: {response.StatusCode}");
+            var pageSize = 12;
+            var (products, totalCount) = await _productService.GetPaginatedProductsAsync(category, page, pageSize);
             
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation($"API Response Content: {content}");
-                
-                var products = JsonSerializer.Deserialize<List<Product>>(content, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-                
-                _logger.LogInformation($"Deserialized {products?.Count ?? 0} products");
-                return View(products);
-            }
-            else
-            {
-                _logger.LogError($"API returned non-success status code: {response.StatusCode}");
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError($"API Error: {error}");
-            }
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = Math.Ceiling((double)totalCount / pageSize);
+            ViewBag.Category = category;
+
+            return View(products);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching products");
+            return View(new List<Product>());
         }
-        
-        _logger.LogWarning("Returning empty product list due to error");
-        return View(new List<Product>());
     }
 
     public async Task<IActionResult> Cart()
