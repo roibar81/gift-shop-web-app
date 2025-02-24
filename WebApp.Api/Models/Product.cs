@@ -27,6 +27,9 @@ public class Product
     public string ImageUrl { get; set; } = string.Empty;
     
     [Required]
+    public bool IsCustomizable { get; set; } = false;
+    
+    [Required]
     public int CategoryId { get; set; }
     
     [Required]

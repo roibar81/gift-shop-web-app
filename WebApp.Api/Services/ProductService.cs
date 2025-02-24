@@ -83,16 +83,16 @@ public class ProductService
             var products = new List<Product>
             {
                 // Printable Products
-                new Product { Name = "White T-Shirt", Description = "100% cotton white t-shirt perfect for custom printing", Price = 19.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/100/300/300" },
-                new Product { Name = "Coffee Mug", Description = "Classic white ceramic mug ideal for personalized designs", Price = 14.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/101/300/300" },
-                new Product { Name = "Phone Case", Description = "Clear phone case ready for custom artwork", Price = 12.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/102/300/300" },
-                new Product { Name = "Canvas Tote Bag", Description = "Natural cotton tote bag for custom prints", Price = 16.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/103/300/300" },
-                new Product { Name = "Mouse Pad", Description = "Standard size mouse pad for custom designs", Price = 9.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/104/300/300" },
-                new Product { Name = "Baseball Cap", Description = "Adjustable cotton cap perfect for custom embroidery or printing", Price = 17.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/105/300/300" },
-                new Product { Name = "Notebook", Description = "Hardcover notebook with customizable cover", Price = 11.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/106/300/300" },
-                new Product { Name = "Pillow Case", Description = "White pillow case ready for custom designs", Price = 13.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/107/300/300" },
-                new Product { Name = "Drawstring Bag", Description = "Lightweight drawstring bag for custom printing", Price = 15.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/108/300/300" },
-                new Product { Name = "Coaster Set", Description = "Set of 4 ceramic coasters for custom designs", Price = 19.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/109/300/300" },
+                new Product { Name = "White T-Shirt", Description = "100% cotton white t-shirt perfect for custom printing", Price = 19.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/100/300/300", IsCustomizable = true },
+                new Product { Name = "Coffee Mug", Description = "Classic white ceramic mug ideal for personalized designs", Price = 14.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/101/300/300", IsCustomizable = true },
+                new Product { Name = "Phone Case", Description = "Clear phone case ready for custom artwork", Price = 12.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/102/300/300", IsCustomizable = true },
+                new Product { Name = "Canvas Tote Bag", Description = "Natural cotton tote bag for custom prints", Price = 16.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/103/300/300", IsCustomizable = true },
+                new Product { Name = "Mouse Pad", Description = "Standard size mouse pad for custom designs", Price = 9.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/104/300/300", IsCustomizable = true },
+                new Product { Name = "Baseball Cap", Description = "Adjustable cotton cap perfect for custom embroidery or printing", Price = 17.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/105/300/300", IsCustomizable = true },
+                new Product { Name = "Notebook", Description = "Hardcover notebook with customizable cover", Price = 11.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/106/300/300", IsCustomizable = true },
+                new Product { Name = "Pillow Case", Description = "White pillow case ready for custom designs", Price = 13.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/107/300/300", IsCustomizable = true },
+                new Product { Name = "Drawstring Bag", Description = "Lightweight drawstring bag for custom printing", Price = 15.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/108/300/300", IsCustomizable = true },
+                new Product { Name = "Coaster Set", Description = "Set of 4 ceramic coasters for custom designs", Price = 19.99m, Category = categories["פריטים מודפסים"], ImageUrl = "https://picsum.photos/id/109/300/300", IsCustomizable = true },
 
                 // Electronics
                 new Product { Name = "Wireless Earbuds", Description = "High-quality wireless earbuds with noise cancellation", Price = 129.99m, Category = categories["אלקטרוניקה"], ImageUrl = "https://picsum.photos/id/1/300/300" },

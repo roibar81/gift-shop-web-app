@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebApp.Api.Data;
 
@@ -10,9 +11,11 @@ using WebApp.Api.Data;
 namespace WebApp.Api.Migrations
 {
     [DbContext(typeof(GiftShopContext))]
-    partial class GiftShopContextModelSnapshot : ModelSnapshot
+    [Migration("20250224203121_AddIsCustomizableToProduct")]
+    partial class AddIsCustomizableToProduct
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
