@@ -19,11 +19,9 @@ public class ProductService
     {
         try
         {
-            var url = $"api/products?page={page}&pageSize={pageSize}";
-            if (!string.IsNullOrEmpty(category) && category.ToLower() != "all")
-            {
-                url += $"&category={category}";
-            }
+            var url = category?.ToLower() == "all" || string.IsNullOrEmpty(category)
+                ? $"api/products?page={page}&pageSize={pageSize}"
+                : $"api/products?category={Uri.EscapeDataString(category)}&page={page}&pageSize={pageSize}";
 
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
@@ -38,6 +36,24 @@ public class ProductService
         {
             _logger.LogError(ex, "Error fetching paginated products");
             return (Enumerable.Empty<Product>(), 0);
+        }
+    }
+
+    public async Task<IEnumerable<string>> GetCategoriesAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("api/products/categories");
+            response.EnsureSuccessStatusCode();
+            
+            var content = await response.Content.ReadAsStringAsync();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            return JsonSerializer.Deserialize<List<string>>(content, options) ?? new List<string>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching categories");
+            return Enumerable.Empty<string>();
         }
     }
 }

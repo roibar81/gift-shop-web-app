@@ -12,24 +12,13 @@
 </div>
 
 <!-- קטגוריות -->
-<section class="categories">
-    <button onclick="filterByCategory('all')" class="@(currentCategory == "all" ? "active" : "")">הכל</button>
-    <button onclick="filterByCategory('Electronics')" class="@(currentCategory == "Electronics" ? "active" : "")">אלקטרוניקה</button>
-    <button onclick="filterByCategory('Books')" class="@(currentCategory == "Books" ? "active" : "")">ספרים</button>
-    <button onclick="filterByCategory('Games')" class="@(currentCategory == "Games" ? "active" : "")">משחקים</button>
-    <button onclick="filterByCategory('Home')" class="@(currentCategory == "Home" ? "active" : "")">לבית</button>
-    <button onclick="filterByCategory('Accessories')" class="@(currentCategory == "Accessories" ? "active" : "")">אביזרים</button>
-    <button onclick="filterByCategory('Sports')" class="@(currentCategory == "Sports" ? "active" : "")">ספורט</button>
-    <button onclick="filterByCategory('Food')" class="@(currentCategory == "Food" ? "active" : "")">אוכל</button>
-    <button onclick="filterByCategory('Art')" class="@(currentCategory == "Art" ? "active" : "")">אומנות</button>
-    <button onclick="filterByCategory('Toys')" class="@(currentCategory == "Toys" ? "active" : "")">צעצועים</button>
-</section>
+<component type="typeof(CategoryFilter)" render-mode="ServerPrerendered" param-SelectedCategory="@currentCategory" />
 
 <!-- רשימת מוצרים -->
 <section class="product-list" id="productList">
     @foreach (var product in Model)
     {
-        <div class="product" data-category="@product.Category">
+        <div class="product" data-category="@product.Category" data-product-id="@product.Id" data-price="@product.Price">
             <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
                  data-src="@product.ImageUrl" 
                  alt="@product.Name"
@@ -80,28 +69,53 @@
             }
         });
 
-        function filterByCategory(category) {
-            window.location.href = `?category=${category}&page=1`;
-        }
-
         async function addToCart(productId) {
             try {
-                const response = await fetch('https://localhost:7001/api/cart', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        productId: productId,
-                        quantity: 1
-                    })
-                });
+                // Get current cart from localStorage
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                
+                // Find product details from the page
+                const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+                const product = {
+                    id: productId,
+                    name: productElement.querySelector('h3').textContent,
+                    price: parseFloat(productElement.getAttribute('data-price')),
+                    imageUrl: productElement.querySelector('img').getAttribute('data-src')
+                };
 
-                if (response.ok) {
-                    const currentCount = parseInt(localStorage.getItem('cartCount') || '0');
-                    updateStoredCartCount(currentCount + 1);
+                // Check if product already in cart
+                const existingItem = cart.find(item => item.productId === productId);
+                if (existingItem) {
+                    existingItem.quantity += 1;
                 } else {
-                    console.error('Failed to add item to cart');
+                    cart.push({
+                        productId: productId,
+                        product: product,
+                        quantity: 1
+                    });
+                }
+
+                // Save updated cart
+                localStorage.setItem('cart', JSON.stringify(cart));
+
+                // Update cart count
+                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+                updateStoredCartCount(totalItems);
+
+                // Optional: Still try to sync with server if available
+                try {
+                    await fetch('https://localhost:7001/api/cart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            productId: productId,
+                            quantity: 1
+                        })
+                    });
+                } catch (serverError) {
+                    console.log('Could not sync with server, but cart was updated locally');
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -117,11 +131,6 @@
 
         img:not(.lazy) {
             opacity: 1;
-        }
-
-        .categories button.active {
-            background-color: #007bff;
-            color: white;
         }
 
         .pagination-container {

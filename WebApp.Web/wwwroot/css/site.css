@@ -58,23 +58,32 @@ body {
 
 .categories {
     display: flex;
-    justify-content: center;
-    gap: 10px;
-    padding: 20px;
     flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0;
+    justify-content: center;
 }
 
 .categories button {
-    padding: 10px 20px;
-    background: #ddd;
-    border: none;
-    cursor: pointer;
+    padding: 8px 16px;
+    border: 2px solid #ddd;
     border-radius: 20px;
-    transition: background-color 0.3s;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
 }
 
 .categories button:hover {
-    background: #ccc;
+    background-color: #f0f0f0;
+    border-color: #999;
+}
+
+.categories button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
 }
 
 .product-list {

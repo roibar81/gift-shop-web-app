@@ -11,7 +11,7 @@ using WebApp.Api.Data;
 namespace WebApp.Api.Migrations
 {
     [DbContext(typeof(GiftShopContext))]
-    [Migration("20250219234453_InitialCreate")]
+    [Migration("20250224143459_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

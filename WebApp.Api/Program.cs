@@ -27,6 +27,9 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader());
 });
 
+// Add HttpClient
+builder.Services.AddHttpClient();
+
 // Configure JSON serialization
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

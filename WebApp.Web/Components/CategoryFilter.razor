@@ -1,0 +1,90 @@
+@using WebApp.Web.Services
+@using Microsoft.AspNetCore.Components
+@inject ProductService ProductService
+@inject NavigationManager NavigationManager
+
+<div class="categories">
+    <button type="button" class="@GetButtonClass("all")" onclick="@(() => OnCategorySelected("all"))">
+        הכל
+    </button>
+    @if (Categories?.Any() == true)
+    {
+        @foreach (var category in Categories)
+        {
+            <button type="button" class="@GetButtonClass(category)" onclick="@(() => OnCategorySelected(category))">
+                @category
+            </button>
+        }
+    }
+</div>
+
+@code {
+    private List<string> Categories { get; set; } = new();
+    
+    [Parameter]
+    public string SelectedCategory { get; set; } = "all";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        try
+        {
+            var categories = await ProductService.GetCategoriesAsync();
+            Categories = categories.ToList();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading categories: {ex.Message}");
+            Categories = new List<string>();
+        }
+    }
+
+    private string GetButtonClass(string category)
+    {
+        return category.ToLower() == (SelectedCategory ?? "all").ToLower() 
+            ? "category-button active" 
+            : "category-button";
+    }
+
+    private void OnCategorySelected(string category)
+    {
+        NavigationManager.NavigateTo($"/?category={Uri.EscapeDataString(category)}&page=1", false);
+    }
+}
+
+<style>
+    .categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 20px 0;
+        justify-content: center;
+    }
+
+    .category-button {
+        padding: 8px 16px;
+        border: 2px solid #ddd;
+        border-radius: 20px;
+        background-color: white;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+
+    .category-button:hover {
+        background-color: #f0f0f0;
+        border-color: #999;
+    }
+
+    .category-button.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #0056b3;
+    }
+</style> 

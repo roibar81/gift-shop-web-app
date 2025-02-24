@@ -29,6 +29,10 @@
     <script>
         let conversation = [];
 
+        function filterByCategory(category) {
+            window.location.href = `?category=${encodeURIComponent(category)}&page=1`;
+        }
+
         function addMessage(text, isUser = false) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${isUser ? 'user' : 'bot'} mb-3`;
@@ -89,7 +93,7 @@
         });
 
         // Start the conversation
-        addMessage("שלום! אני יועץ המתנות שלך ואשמח לעזור לך למצוא את המתנה המושלמת! ספר/י לי למי המתנה מיועדת ומה את/ה מחפש/ת. אשמח לשמוע על התקציב, האירוע, תחומי העניין של מקבל/ת המתנה, או לעזור לך לחפש סוגים ספציפיים של מתנות!");
+        addMessage("שלום! אני יועץ המתנות שלך ואשמח לעזור לך למצוא את המתנה המושלמת! אשמח לשמוע פרטים על המתנה לעזור לך לבחור בוא נתחיל בלאיזה אירוע המתנה מיועדת.");
     </script>
 
     <style>
