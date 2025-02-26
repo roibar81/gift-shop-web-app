@@ -10,14 +10,42 @@
     </div>
     <div class="text-left mt-4">
         <h4>סה"כ: <span id="cartTotal">0</span> ₪</h4>
-        <button class="btn btn-primary" onclick="proceedToCheckout()">המשך לתשלום</button>
+        <button class="btn btn-primary" onclick="showComplementaryProducts()">המשך לתשלום</button>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="complementaryProductsModal" tabindex="-1" aria-labelledby="complementaryProductsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="complementaryProductsModalLabel">מוצרים משלימים מומלצים</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="complementaryProductsContent">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">טוען...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגור</button>
+                <button type="button" class="btn btn-primary" onclick="proceedToCheckout()">המשך לתשלום</button>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
+        let complementaryProductsModal;
+        
         document.addEventListener('DOMContentLoaded', function() {
             loadCart();
+            complementaryProductsModal = new bootstrap.Modal(document.getElementById('complementaryProductsModal'));
         });
 
         function loadCart() {
@@ -136,6 +164,43 @@
             }
         }
 
+        async function showComplementaryProducts() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            if (cart.length === 0) {
+                proceedToCheckout();
+                return;
+            }
+
+            // Get the first product from the cart
+            const mainProduct = cart[0];
+            
+            try {
+                const response = await fetch(`https://localhost:7001/api/chat/complementary-products/${mainProduct.productId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('complementaryProductsContent').innerHTML = data.response;
+                    
+                    // Add click handlers for any product links
+                    document.querySelectorAll('#complementaryProductsContent a').forEach(link => {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const productId = link.href.split('/').pop();
+                            addToCart(parseInt(productId));
+                        });
+                    });
+                } else {
+                    document.getElementById('complementaryProductsContent').innerHTML = 
+                        '<div class="alert alert-warning">לא הצלחנו לטעון המלצות למוצרים משלימים</div>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('complementaryProductsContent').innerHTML = 
+                    '<div class="alert alert-danger">אירעה שגיאה בטעינת המוצרים המשלימים</div>';
+            }
+
+            complementaryProductsModal.show();
+        }
+
         function proceedToCheckout() {
             window.location.href = '/Home/Checkout';
         }
@@ -165,6 +230,19 @@
             align-items: center;
             justify-content: center;
             padding: 0;
+        }
+
+        #complementaryProductsContent {
+            min-height: 200px;
+        }
+
+        #complementaryProductsContent a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+
+        #complementaryProductsContent a:hover {
+            text-decoration: underline;
         }
     </style>
 } 

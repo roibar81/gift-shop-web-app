@@ -21,18 +21,41 @@ public class ChatController : ControllerBase
     }
 
     [HttpPost("conversation")]
-    public async Task<IActionResult> HandleConversation([FromBody] ConversationRequest request)
+    public async Task<ActionResult<ChatResponse>> PostConversation([FromBody] ConversationRequest request)
     {
         try
         {
-            _logger.LogInformation("Handling conversation request");
             var response = await _chatService.GetResponseAsync(request.Messages);
-            return Ok(new { response });
+            return Ok(new ChatResponse { Response = response });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error handling conversation");
-            return StatusCode(500, "An error occurred while processing your request");
+            _logger.LogError(ex, "Error processing chat conversation");
+            return StatusCode(500, "Error processing chat conversation");
         }
     }
+
+    [HttpGet("complementary-products/{productId}")]
+    public async Task<ActionResult<ChatResponse>> GetComplementaryProducts(int productId)
+    {
+        try
+        {
+            var response = await _chatService.GetComplementaryProductsAsync(productId);
+            return Ok(new ChatResponse { Response = response });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting complementary products suggestions");
+            return StatusCode(500, "Error getting complementary products suggestions");
+        }
+    }
+}
+
+public class ChatResponse
+{
+    public string Response { get; set; } = string.Empty;
 } 

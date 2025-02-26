@@ -91,4 +91,62 @@ public class ChatService
             throw;
         }
     }
+
+    public async Task<string> GetComplementaryProductsAsync(int productId)
+    {
+        try
+        {
+            var products = await _productService.GetProductsAsync();
+            var mainProduct = products.FirstOrDefault(p => p.Id == productId);
+            
+            if (mainProduct == null)
+            {
+                throw new ArgumentException("המוצר לא נמצא");
+            }
+
+            var productsList = string.Join(Environment.NewLine, products.Select(p => 
+                $"- {p.Name} (${p.Price:F2} / ₪{(p.Price * 3.7m):F0} ש\"ח): {p.Description} [קטגוריה: {p.Category.Name}] [מזהה: {p.Id}]"));
+
+            var systemMessage = $@"אתה יועץ מתנות מקצועי שממליץ על מוצרים משלימים. המטרה שלך היא להציע 2-3 מוצרים שמשתלבים היטב עם המוצר שהלקוח בחר.
+
+המוצר שנבחר:
+- שם: {mainProduct.Name}
+- מחיר: ${mainProduct.Price:F2} / ₪{(mainProduct.Price * 3.7m):F0} ש""ח
+- קטגוריה: {mainProduct.Category.Name}
+- תיאור: {mainProduct.Description}
+
+כללי המלצה:
+1. להציע 2-3 מוצרים משלימים שיכולים להתאים יחד עם המוצר שנבחר
+2. להתמקד במוצרים שמשתלבים היטב מבחינת:
+   - שימוש משותף
+   - התאמה סגנונית
+   - טווח מחירים דומה
+3. להסביר בקצרה למה כל מוצר מתאים
+4. להשתמש בפורמט HTML לקישורים: <a href='/Home/Product/{{ProductId}}'>{{ProductName}}</a>
+
+המוצרים הזמינים:
+{productsList}
+
+אנא הצע 2-3 מוצרים משלימים למוצר שנבחר, והסבר בקצרה למה הם מתאימים.";
+
+            var options = new ChatCompletionsOptions
+            {
+                Temperature = 0.7f,
+                MaxTokens = 800,
+                Messages = 
+                {
+                    new Azure.AI.OpenAI.ChatMessage(ChatRole.System, systemMessage),
+                    new Azure.AI.OpenAI.ChatMessage(ChatRole.User, "אנא הצע מוצרים משלימים למוצר זה")
+                }
+            };
+
+            var response = await _openAIClient.GetChatCompletionsAsync(_deploymentName, options);
+            return response.Value.Choices[0].Message.Content;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting complementary products suggestions");
+            throw;
+        }
+    }
 } 
